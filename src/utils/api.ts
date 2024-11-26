@@ -1,63 +1,51 @@
-import type { WeatherData, ForecastData, GeocodingData } from '../types/weather';
+import type { WeatherData, WeatherError, GeocodingData } from '../types/weather';
 
-async function handleApiResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Erreur réseau' }));
-    throw new Error(errorData.error || 'Erreur réseau');
+const API_KEY = '749918dd5463bc3379e4c0d8d13f2c9e';
+const BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
+
+export async function searchCities(query: string): Promise<GeocodingData[]> {
+  try {
+    const response = await fetch(
+      `${GEO_URL}/direct?q=${encodeURIComponent(query)},fr&limit=5&appid=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error('Erreur lors de la recherche des villes');
+    }
+
+    const data = await response.json();
+    return data as GeocodingData[];
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    throw new Error('Impossible de rechercher les villes');
   }
-
-  const data = await response.json();
-  return data as T;
 }
 
-export async function fetchWeatherData(city: string) {
+export async function fetchWeatherData(lat: number, lon: number): Promise<WeatherData> {
   try {
-    // Appel à la fonction serverless pour obtenir les coordonnées
-    const geoResponse = await fetch(`/api/geocode?city=${encodeURIComponent(city)}`);
-    const geoData = await handleApiResponse<GeocodingData>(geoResponse);
-    
-    // Appel à la fonction serverless pour obtenir la météo
-    const weatherResponse = await fetch(
-      `/api/weather?lat=${geoData.lat}&lon=${geoData.lon}`
+    const response = await fetch(
+      `${BASE_URL}/weather?lat=${lat}&lon=${lon}&units=metric&lang=fr&appid=${API_KEY}`
     );
-    const weatherData = await handleApiResponse<WeatherData>(weatherResponse);
 
-    return {
-      current: {
-        name: geoData.name,
-        dt: weatherData.current.dt,
-        main: {
-          temp: weatherData.current.temp,
-          feels_like: weatherData.current.feels_like,
-          humidity: weatherData.current.humidity,
-          temp_min: weatherData.daily[0].temp.min,
-          temp_max: weatherData.daily[0].temp.max
-        },
-        weather: weatherData.current.weather,
-        wind: {
-          speed: weatherData.current.wind_speed
-        },
-        sys: {
-          country: geoData.country
-        }
-      },
-      forecast: {
-        list: weatherData.daily.slice(1, 4).map(day => ({
-          dt: day.dt,
-          main: {
-            temp: day.temp.day,
-            temp_min: day.temp.min,
-            temp_max: day.temp.max
-          },
-          weather: [day.weather[0]],
-          pop: day.pop
-        }))
-      }
-    };
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errorData = data as WeatherError;
+      throw new Error(
+        errorData.message || 
+        `Erreur ${response.status}: Impossible de charger les données météo`
+      );
+    }
+
+    if (!data.main?.temp || !data.weather?.[0]) {
+      throw new Error('Format de données météo invalide');
+    }
+
+    return data as WeatherData;
   } catch (error) {
-    console.error('API error:', error);
     if (error instanceof Error) {
-      throw new Error(`Erreur: ${error.message}`);
+      throw error;
     }
     throw new Error('Erreur réseau: Impossible de contacter le serveur météo');
   }

@@ -1,47 +1,24 @@
 export interface WeatherData {
-  current: {
-    dt: number;
+  main: {
     temp: number;
-    feels_like: number;
     humidity: number;
-    wind_speed: number;
-    weather: Array<{
-      main: string;
-      description: string;
-      icon: string;
-    }>;
+    feels_like: number;
   };
-  daily: Array<{
-    dt: number;
-    temp: {
-      day: number;
-      min: number;
-      max: number;
-    };
-    weather: Array<{
-      main: string;
-      description: string;
-      icon: string;
-    }>;
-    pop: number;
+  weather: Array<{
+    main: string;
+    description: string;
+    icon: string;
   }>;
+  wind: {
+    speed: number;
+  };
+  name: string;
+  dt: number;
 }
 
-export interface ForecastData {
-  list: Array<{
-    dt: number;
-    main: {
-      temp: number;
-      temp_min: number;
-      temp_max: number;
-    };
-    weather: Array<{
-      main: string;
-      description: string;
-      icon: string;
-    }>;
-    pop: number;
-  }>;
+export interface WeatherError {
+  cod: number;
+  message: string;
 }
 
 export interface GeocodingData {
@@ -53,9 +30,4 @@ export interface GeocodingData {
   local_names?: {
     [key: string]: string;
   };
-}
-
-export interface WeatherError {
-  cod: number;
-  message: string;
 }
