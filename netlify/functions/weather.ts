@@ -1,10 +1,9 @@
 import { Handler } from '@netlify/functions';
 
 const API_KEY = process.env.OPENWEATHER_API_KEY;
-const BASE_URL = 'https://api.openweathermap.org/data/3.0/onecall';
+const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
 export const handler: Handler = async (event) => {
-  // Ajout des headers CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -23,7 +22,7 @@ export const handler: Handler = async (event) => {
     }
 
     const response = await fetch(
-      `${BASE_URL}?lat=${lat}&lon=${lon}&units=metric&lang=fr&appid=${API_KEY}`
+      `${BASE_URL}/weather?lat=${lat}&lon=${lon}&units=metric&lang=fr&appid=${API_KEY}`
     );
 
     const data = await response.json();

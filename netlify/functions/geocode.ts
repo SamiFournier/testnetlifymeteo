@@ -4,7 +4,6 @@ const API_KEY = process.env.OPENWEATHER_API_KEY;
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
 export const handler: Handler = async (event) => {
-  // Ajout des headers CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -23,7 +22,7 @@ export const handler: Handler = async (event) => {
     }
 
     const response = await fetch(
-      `${GEO_URL}/direct?q=${encodeURIComponent(city)},fr&limit=1&appid=${API_KEY}`
+      `${GEO_URL}/direct?q=${encodeURIComponent(city)},fr&limit=5&type=city&appid=${API_KEY}`
     );
 
     const data = await response.json();
@@ -47,7 +46,7 @@ export const handler: Handler = async (event) => {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(data[0]),
+      body: JSON.stringify(data),
     };
   } catch (error) {
     console.error('Geocoding error:', error);

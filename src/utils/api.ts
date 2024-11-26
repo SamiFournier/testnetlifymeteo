@@ -1,13 +1,9 @@
 import type { WeatherData, WeatherError, GeocodingData } from '../types/weather';
 
-const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
-const BASE_URL = 'https://api.openweathermap.org/data/2.5';
-const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
-
 export async function searchCities(query: string): Promise<GeocodingData[]> {
   try {
     const response = await fetch(
-      `${GEO_URL}/direct?q=${encodeURIComponent(query)},fr&limit=5&type=city&appid=${API_KEY}`
+      `/api/geocode?city=${encodeURIComponent(query)}`
     );
 
     if (!response.ok) {
@@ -25,7 +21,7 @@ export async function searchCities(query: string): Promise<GeocodingData[]> {
 export async function fetchWeatherData(lat: number, lon: number): Promise<WeatherData> {
   try {
     const response = await fetch(
-      `${BASE_URL}/weather?lat=${lat}&lon=${lon}&units=metric&lang=fr&appid=${API_KEY}`
+      `/api/weather?lat=${lat}&lon=${lon}`
     );
 
     const data = await response.json();
