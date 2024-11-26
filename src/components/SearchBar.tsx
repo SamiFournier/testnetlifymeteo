@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import type { GeocodingData } from '../types/weather';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface SearchBarProps {
   onCitySelect: (city: GeocodingData) => void;
@@ -13,6 +14,9 @@ export function SearchBar({ onCitySelect, onSearch }: SearchBarProps) {
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  
+  // Debounce la valeur de recherche
+  const debouncedQuery = useDebounce(query, 300);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -25,25 +29,29 @@ export function SearchBar({ onCitySelect, onSearch }: SearchBarProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSearch = async (value: string) => {
-    setQuery(value);
-    if (value.length < 2) {
-      setResults([]);
-      setIsOpen(false);
-      return;
-    }
+  // Utilise la valeur debounced pour la recherche
+  useEffect(() => {
+    const searchCities = async () => {
+      if (debouncedQuery.length < 2) {
+        setResults([]);
+        setIsOpen(false);
+        return;
+      }
 
-    setLoading(true);
-    try {
-      const cities = await onSearch(value);
-      setResults(cities);
-      setIsOpen(true);
-    } catch (error) {
-      console.error('Search error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setLoading(true);
+      try {
+        const cities = await onSearch(debouncedQuery);
+        setResults(cities);
+        setIsOpen(true);
+      } catch (error) {
+        console.error('Search error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    searchCities();
+  }, [debouncedQuery, onSearch]);
 
   const handleSelect = (city: GeocodingData) => {
     onCitySelect(city);
@@ -57,7 +65,7 @@ export function SearchBar({ onCitySelect, onSearch }: SearchBarProps) {
         <input
           type="text"
           value={query}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => setQuery(e.target.value)}
           placeholder="Rechercher une ville..."
           className="w-full px-4 py-2 pl-10 bg-white bg-opacity-90 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
@@ -72,7 +80,7 @@ export function SearchBar({ onCitySelect, onSearch }: SearchBarProps) {
 
       {isOpen && results.length > 0 && (
         <div className="absolute w-full mt-2 bg-white rounded-lg shadow-lg overflow-hidden z-10">
-          {results.map((city, index) => (
+          {results.map((city) => (
             <button
               key={`${city.lat}-${city.lon}`}
               onClick={() => handleSelect(city)}

@@ -6,8 +6,9 @@ const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
 export async function searchCities(query: string): Promise<GeocodingData[]> {
   try {
+    // Ajout du paramètre type=city pour ne récupérer que les villes principales
     const response = await fetch(
-      `${GEO_URL}/direct?q=${encodeURIComponent(query)},fr&limit=5&appid=${API_KEY}`
+      `${GEO_URL}/direct?q=${encodeURIComponent(query)},fr&limit=5&type=city&appid=${API_KEY}`
     );
 
     if (!response.ok) {
